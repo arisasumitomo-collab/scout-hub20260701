@@ -1066,7 +1066,15 @@ async function loadData() {
   try {
     showToast('データを読み込み中...');
     const data = await gasGet({ action: 'getAll' });
-    state.jobs = data.jobs || [];
+    // GASがjobsにmember_idを含まない場合に備え、現在のlocal stateから担当者の紐づけを保持する
+    const prevMemberMap = {};
+    state.jobs.forEach(j => { if (j.job_id && j.member_id) prevMemberMap[j.job_id] = j.member_id; });
+    state.jobs = (data.jobs || []).map(job => {
+      if (!job.member_id && prevMemberMap[job.job_id]) {
+        return { ...job, member_id: prevMemberMap[job.job_id] };
+      }
+      return job;
+    });
     state.actuals = data.actuals || [];
     state.scoutData = data.scoutData || [];
     state.members = data.members || [];
@@ -2051,19 +2059,4 @@ function parseCsvLine(line) {
     else { field += c; }
   }
   result.push(field);
-  return result;
-}
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-// ─── Init ─────────────────────────────────────────────────
-document.getElementById('settings-gas-url').value = gasUrl;
-loadData();
-updateSim2();
-</script>
-</body>
-</html>
+  ret
