@@ -759,10 +759,12 @@ const GAS_URL = '';
                 placeholder="https://script.google.com/macros/s/..."
                 value="">
             </div>
-            <div style="display:flex;gap:10px;margin-top:4px;">
+            <div style="display:flex;gap:10px;margin-top:4px;flex-wrap:wrap;">
               <button class="btn btn-primary" onclick="saveGasUrl()">URLを保存して接続</button>
               <button class="btn btn-ghost" onclick="testConnection()">接続テスト</button>
+              <button class="btn btn-ghost" onclick="copyShareUrl()">🔗 チーム共有URLをコピー</button>
             </div>
+            <p style="font-size:12px;color:var(--ink-muted);margin-top:8px;">💡 「チーム共有URLをコピー」でGAS URLを含んだリンクを生成。メンバーにこのリンクを送ると、相手の画面でGAS URLが自動設定されます。</p>
             <div id="connection-status" style="margin-top:12px;font-size:13px;"></div>
           </div>
         </div>
@@ -899,6 +901,11 @@ const GAS_URL = '';
 // ─── State ───────────────────────────────────────────────
 let state = { jobs: [], actuals: [], scoutData: [], csvPreview: [], members: [], schedules: [], scoutHistory: [] };
 let gasUrl = localStorage.getItem('gasUrl') || '';
+// URLパラメータからGAS URLを自動読み込み（チーム共有リンク対応）
+(function() {
+  const p = new URLSearchParams(location.search).get('gasUrl');
+  if (p && !gasUrl) { gasUrl = p; localStorage.setItem('gasUrl', p); }
+})();
 
 // ─── Tab navigation ──────────────────────────────────────
 const tabTitles = {
@@ -1961,6 +1968,19 @@ function actionLabel(action) {
 }
 
 // ─── Settings ────────────────────────────────────────────
+function copyShareUrl() {
+  if (!gasUrl) { showToast('まずGAS URLを保存してから使ってください'); return; }
+  const shareUrl = location.origin + location.pathname + '?gasUrl=' + encodeURIComponent(gasUrl);
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      showToast('✅ チーム共有URLをコピーしました！メンバーにこのURLを送ってください');
+    }).catch(() => {
+      prompt('以下のURLをコピーしてメンバーに共有してください：', shareUrl);
+    });
+  } else {
+    prompt('以下のURLをコピーしてメンバーに共有してください：', shareUrl);
+  }
+}
 function saveGasUrl() {
   const url = document.getElementById('settings-gas-url').value.trim();
   if (!url) { showToast('URLを入力してください'); return; }
@@ -1981,7 +2001,7 @@ async function testConnection() {
     el.innerHTML = '<span style="color:var(--success);font-weight:600;">✅ 接続成功！</span>';
     updateConnIndicator('connected');
   } catch(e) {
-    el.innerHTML = `<span style="color:var(--danger);">❌ 接続失敗: ${e.message}</span>`;
+    el.innerHTML = `<span style="color:var(--danger);">❌ 接続失敗: ${e.message}<br><small style="font-weight:normal;line-height:1.8;">【確認事項】GASのデプロイ設定で「アクセスできるユーザー」→ <b>「全員」</b>（Googleアカウント不要）、「次のユーザーとして実行」→ <b>「自分」</b>になっているか確認してください。変更後は必ず「新しいデプロイ」を作成し、新しいURLを入力してください。</small></span>`;
     updateConnIndicator('error');
   } finally {
     gasUrl = originalGasUrl;
