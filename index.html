@@ -2059,4 +2059,19 @@ function parseCsvLine(line) {
     else { field += c; }
   }
   result.push(field);
-  ret
+  return result;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── Init ─────────────────────────────────────────────────
+document.getElementById('settings-gas-url').value = gasUrl;
+loadData();
+updateSim2();
+</script>
+</body>
+</html>
