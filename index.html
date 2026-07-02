@@ -1078,7 +1078,14 @@ async function loadData() {
     state.actuals = data.actuals || [];
     state.scoutData = data.scoutData || [];
     state.members = data.members || [];
-    state.schedules = data.schedules || [];
+    // GASデータとローカルデータをマージ（GAS未保存のローカル入力を消さないため）
+    const gasSchedMap = {};
+    (data.schedules || []).forEach(function(s) { gasSchedMap[s.job_id + '|' + s.date] = s; });
+    (state.schedules || []).forEach(function(s) {
+      const key = s.job_id + '|' + s.date;
+      if (!gasSchedMap[key] && Number(s.sent_count) > 0) gasSchedMap[key] = s;
+    });
+    state.schedules = Object.values(gasSchedMap);
     state.scoutHistory = data.scoutHistory || [];
     localStorage.setItem('scoutData', JSON.stringify(state));
     renderAll();
@@ -2018,7 +2025,7 @@ async function testConnection() {
 function clearLocalCache() {
   if (!confirm('ローカルキャッシュをクリアしますか？')) return;
   localStorage.removeItem('scoutData');
-  state = { jobs: [], actuals: [], scoutData: [], csvPreview: [] };
+  state = { jobs: [], actuals: [], scoutData: [], csvPreview: [], members: [], schedules: [], scoutHistory: [] };
   renderAll();
   showToast('キャッシュをクリアしました');
 }
