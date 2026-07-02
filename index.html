@@ -47,15 +47,8 @@ body {
   z-index: 100;
 }
 .sidebar-logo {
-  padding: 24px 20px 20px;
+  padding: 20px 20px 16px;
   border-bottom: 1px solid rgba(255,255,255,.08);
-}
-.sidebar-logo .logo-mark {
-  font-size: 11px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.4);
-  margin-bottom: 4px;
 }
 .sidebar-logo h1 {
   font-size: 17px;
@@ -64,6 +57,11 @@ body {
   line-height: 1.3;
 }
 .sidebar-logo h1 span { color: #a5b4fc; }
+.sidebar-logo .logo-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,.35);
+  margin-top: 3px;
+}
 
 .sidebar-nav { flex: 1; padding: 12px 0; }
 .nav-item {
@@ -396,8 +394,8 @@ const GAS_URL = '';
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-mark">Bizreach</div>
       <h1>Scout<span>Hub</span></h1>
+      <div class="logo-sub">スカウト運用管理システム</div>
     </div>
     <nav class="sidebar-nav">
       <div class="nav-item active" data-tab="dashboard">
@@ -415,6 +413,9 @@ const GAS_URL = '';
       <div class="nav-item" data-tab="simulator">
         <span class="icon">🧮</span> シミュレーター
       </div>
+      <div class="nav-item" data-tab="report">
+        <span class="icon">📋</span> レポート生成
+      </div>
       <div class="nav-item" data-tab="members">
         <span class="icon">👥</span> 担当者管理
       </div>
@@ -422,7 +423,7 @@ const GAS_URL = '';
         <span class="icon">⚙️</span> 設定
       </div>
     </nav>
-    <div class="sidebar-footer">Scout Management v1.0</div>
+    <div class="sidebar-footer">Scout Management v2.0</div>
   </aside>
 
   <!-- Main -->
@@ -440,6 +441,11 @@ const GAS_URL = '';
       <!-- ═══ DASHBOARD ═══ -->
       <div class="panel active" id="panel-dashboard">
         <div id="gas-banner-area"></div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <span style="font-size:12.5px;color:var(--ink-light);font-weight:600;">🏢 会社：</span>
+          <div id="company-filter-btns" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
 
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
           <label style="font-size:12.5px;color:var(--ink-light);font-weight:600;">📅 集計期間：</label>
@@ -522,6 +528,7 @@ const GAS_URL = '';
                 <thead>
                   <tr>
                     <th>ポジション名</th>
+                    <th>会社</th>
                     <th>担当者</th>
                     <th>種別</th>
                     <th>週次目標</th>
@@ -599,8 +606,14 @@ const GAS_URL = '';
         </div>
 
         <div class="card" style="margin-bottom:16px;">
-          <div class="card-header"><span class="card-title">ビズリーチ レポートCSVの取り込み</span></div>
+          <div class="card-header"><span class="card-title">スカウトレポートCSVの取り込み</span></div>
           <div class="card-body">
+            <div class="form-group" style="margin-bottom:16px;">
+              <label class="form-label">会社を選択してからアップロードしてください</label>
+              <select class="form-input" id="import-company-select" style="max-width:320px;">
+                <option value="">— 会社を選択 —</option>
+              </select>
+            </div>
             <div
               class="dropzone"
               id="dropzone"
@@ -656,60 +669,57 @@ const GAS_URL = '';
           <span class="section-title">シミュレーター</span>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
 
           <!-- 実績ベース -->
           <div class="card">
-            <div class="card-header">
-              <span class="card-title">📈 実績ベース逆算</span>
-            </div>
+            <div class="card-header"><span class="card-title">📈 実績ベース逆算</span></div>
             <div class="card-body">
-              <p style="font-size:13px;color:var(--ink-light);margin-bottom:16px;">
-                過去の実績歩留から、目標内定数を達成するために必要なスカウト送付数を自動計算します。
-              </p>
+              <p style="font-size:13px;color:var(--ink-light);margin-bottom:16px;">過去の実績歩留から、目標内定数を達成するために必要なスカウト送付数を自動計算します。</p>
               <div class="form-group">
                 <label class="form-label">対象求人</label>
-                <select class="form-input" id="sim1-job" onchange="updateSim1()">
-                  <option value="">— 全求人の平均 —</option>
-                </select>
+                <select class="form-input" id="sim1-job" onchange="updateSim1()"><option value="">— 全求人の平均 —</option></select>
               </div>
               <div class="form-group">
-                <label class="form-label">目標 内定数</label>
+                <label class="form-label">目標 内定承諾数</label>
                 <input type="number" class="form-input" id="sim1-target-hire" value="1" min="1" oninput="updateSim1()">
               </div>
               <div class="divider"></div>
               <div id="sim1-funnel" style="margin-bottom:16px;"></div>
               <div class="sim-result" id="sim1-result">
-                <div>
-                  <div class="sim-result-num" id="sim1-num">—</div>
-                  <div class="sim-result-label">必要なスカウト送付数</div>
-                </div>
-                <div style="text-align:right; font-size:13px; opacity:.8;" id="sim1-breakdown"></div>
+                <div><div class="sim-result-num" id="sim1-num">—</div><div class="sim-result-label">必要なスカウト送付数</div></div>
+                <div style="text-align:right;font-size:12px;opacity:.85;line-height:1.8;" id="sim1-breakdown"></div>
               </div>
             </div>
           </div>
 
           <!-- 仮定ベース -->
           <div class="card">
-            <div class="card-header">
-              <span class="card-title">🔧 仮定ベース計画</span>
-            </div>
+            <div class="card-header"><span class="card-title">🔧 仮定ベース計画</span></div>
             <div class="card-body">
-              <p style="font-size:13px;color:var(--ink-light);margin-bottom:16px;">
-                送付数・歩留を自由に設定して、目標決定数を逆算します。
-              </p>
+              <p style="font-size:13px;color:var(--ink-light);margin-bottom:16px;">歩留を自由に設定して、目標内定承諾数を達成するための送付数を逆算します。</p>
+              <p style="font-size:11.5px;color:var(--ink-muted);margin-bottom:12px;">選考フロー：スカウト → 既読 → 返信 → 内定承諾</p>
 
               <div class="sim-section">
-                <div class="sim-section-title">スカウト → 返信（歩留）</div>
+                <div class="sim-section-title">① スカウト → 既読（歩留）</div>
                 <div style="display:flex;align-items:center;gap:12px;">
-                  <input type="range" min="0.5" max="30" step="0.5" value="3" id="sim2-reply-rate" oninput="updateSim2(); document.getElementById('sim2-reply-val').textContent=this.value+'%'">
-                  <span style="min-width:42px;font-weight:700;font-size:15px;" id="sim2-reply-val">3%</span>
+                  <input type="range" min="1" max="90" step="1" value="40" id="sim2-read-rate" oninput="updateSim2(); document.getElementById('sim2-read-val').textContent=this.value+'%'">
+                  <span style="min-width:42px;font-weight:700;font-size:15px;" id="sim2-read-val">40%</span>
                 </div>
-                <div class="range-labels"><span>0.5%</span><span>30%</span></div>
+                <div class="range-labels"><span>1%</span><span>90%</span></div>
               </div>
 
               <div class="sim-section">
-                <div class="sim-section-title">返信 → 決定（内定承諾）（歩留）</div>
+                <div class="sim-section-title">② 既読 → 返信（歩留）</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <input type="range" min="0.5" max="50" step="0.5" value="8" id="sim2-reply-rate" oninput="updateSim2(); document.getElementById('sim2-reply-val').textContent=this.value+'%'">
+                  <span style="min-width:42px;font-weight:700;font-size:15px;" id="sim2-reply-val">8%</span>
+                </div>
+                <div class="range-labels"><span>0.5%</span><span>50%</span></div>
+              </div>
+
+              <div class="sim-section">
+                <div class="sim-section-title">③ 返信 → 内定承諾（歩留）</div>
                 <div style="display:flex;align-items:center;gap:12px;">
                   <input type="range" min="0.5" max="50" step="0.5" value="5" id="sim2-hire-rate" oninput="updateSim2(); document.getElementById('sim2-hire-val').textContent=this.value+'%'">
                   <span style="min-width:42px;font-weight:700;font-size:15px;" id="sim2-hire-val">5%</span>
@@ -718,17 +728,37 @@ const GAS_URL = '';
               </div>
 
               <div class="form-group">
-                <label class="form-label">目標 決定数（内定承諾数）</label>
+                <label class="form-label">目標 内定承諾数</label>
                 <input type="number" class="form-input" id="sim2-target" value="1" min="1" oninput="updateSim2()">
               </div>
               <div class="sim-result" id="sim2-result">
-                <div>
-                  <div class="sim-result-num" id="sim2-num">—</div>
-                  <div class="sim-result-label">必要なスカウト送付数</div>
-                </div>
-                <div style="text-align:right; font-size:13px; opacity:.8;" id="sim2-breakdown"></div>
+                <div><div class="sim-result-num" id="sim2-num">—</div><div class="sim-result-label">必要なスカウト送付数</div></div>
+                <div style="text-align:right;font-size:12px;opacity:.85;line-height:1.8;" id="sim2-breakdown"></div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- 採用単価試算 -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">💰 採用単価試算</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--ink-light);margin-bottom:16px;">スカウト料金と成功報酬を設定すると、採用1名あたりの単価を自動計算します。</p>
+            <div class="form-row-3">
+              <div class="form-group">
+                <label class="form-label">スカウト料金（1通 / 円）</label>
+                <input type="number" class="form-input" id="cost-per-send" value="700" min="0" oninput="updateCostSim()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">想定年収（万円）</label>
+                <input type="number" class="form-input" id="cost-salary" value="600" min="0" oninput="updateCostSim()">
+              </div>
+              <div class="form-group">
+                <label class="form-label">成功報酬率（%）</label>
+                <input type="number" class="form-input" id="cost-success-rate" value="15" min="0" max="100" step="0.1" oninput="updateCostSim()">
+              </div>
+            </div>
+            <div id="cost-result" style="margin-top:8px;"></div>
           </div>
         </div>
       </div>
@@ -770,6 +800,21 @@ const GAS_URL = '';
         </div>
 
         <div class="card" style="margin-top:16px;">
+          <div class="card-header"><span class="card-title">🏢 会社管理</span></div>
+          <div class="card-body">
+            <p style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">スカウト運用を管理する会社を登録・削除できます。求人やCSVインポートで会社を指定するために使用します。</p>
+            <div id="company-list" style="margin-bottom:14px;"></div>
+            <div style="display:flex;gap:8px;align-items:flex-end;">
+              <div class="form-group" style="margin-bottom:0;flex:1;">
+                <label class="form-label">会社名</label>
+                <input type="text" class="form-input" id="new-company-name" placeholder="例：〇〇株式会社">
+              </div>
+              <button class="btn btn-primary" onclick="addCompany()">＋ 追加</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
           <div class="card-header"><span class="card-title">データ管理</span></div>
           <div class="card-body">
             <p style="font-size:13px;color:var(--ink-light);margin-bottom:14px;">
@@ -778,6 +823,34 @@ const GAS_URL = '';
             <button class="btn btn-danger-ghost btn-sm" onclick="clearLocalCache()">🗑 ローカルキャッシュをクリア</button>
           </div>
         </div>
+      </div>
+
+      <!-- ═══ REPORT ═══ -->
+      <div class="panel" id="panel-report">
+        <div class="section-header">
+          <span class="section-title">レポート生成</span>
+        </div>
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-body">
+            <div class="form-row">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">対象月</label>
+                <input type="month" class="form-input" id="report-month">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">会社</label>
+                <select class="form-input" id="report-company">
+                  <option value="">全社</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:14px;">
+              <button class="btn btn-primary" onclick="generateReport()">📋 レポートを生成</button>
+              <button class="btn btn-ghost" onclick="printReport()" style="margin-left:8px;">🖨 印刷／PDF保存</button>
+            </div>
+          </div>
+        </div>
+        <div id="report-output"></div>
       </div>
 
     </div><!-- /content -->
@@ -801,12 +874,20 @@ const GAS_URL = '';
       </div>
       <div class="form-row">
         <div class="form-group">
+          <label class="form-label">会社</label>
+          <select class="form-input" id="jm-company">
+            <option value="">— 未設定 —</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label class="form-label">求人種別</label>
           <select class="form-input" id="jm-type">
             <option>タレント</option>
             <option>ハイクラスタレント</option>
           </select>
         </div>
+      </div>
+      <div class="form-row">
         <div class="form-group">
           <label class="form-label">担当者</label>
           <select class="form-input" id="jm-member">
@@ -899,7 +980,8 @@ const GAS_URL = '';
 <!-- ───────── JavaScript ───────── -->
 <script>
 // ─── State ───────────────────────────────────────────────
-let state = { jobs: [], actuals: [], scoutData: [], csvPreview: [], members: [], schedules: [], scoutHistory: [] };
+let state = { jobs: [], actuals: [], scoutData: [], csvPreview: [], members: [], schedules: [], scoutHistory: [], companies: [] };
+let dashCompanyFilter = ''; // '' = 全社
 let gasUrl = localStorage.getItem('gasUrl') || '';
 // URLパラメータからGAS URLを自動読み込み（チーム共有リンク対応）
 (function() {
@@ -914,6 +996,7 @@ const tabTitles = {
   schedule:   '送付スケジュール',
   import:     'CSVインポート',
   simulator:  'シミュレーター',
+  report:     'レポート生成',
   members:    '担当者管理',
   settings:   '設定'
 };
@@ -925,8 +1008,12 @@ document.querySelectorAll('.nav-item').forEach(item => {
     const tab = item.dataset.tab;
     document.getElementById('panel-' + tab).classList.add('active');
     document.getElementById('topbar-title').textContent = tabTitles[tab];
-    if (tab === 'simulator') { updateSim1(); updateSim2(); }
+    if (tab === 'simulator') { updateSim1(); updateSim2(); updateCostSim(); }
     if (tab === 'schedule')  { renderSchedule(); }
+    if (tab === 'targets')   { renderTargets(); }
+    if (tab === 'dashboard') { renderDashboard(); }
+    if (tab === 'settings')  { renderCompanyList(); }
+    if (tab === 'report')    { initReportPanel(); }
   });
 });
 
@@ -1055,6 +1142,7 @@ async function loadData() {
     const cached = localStorage.getItem('scoutData');
     if (cached) {
       state = JSON.parse(cached);
+      if (!state.companies) state.companies = []; // v2以前のキャッシュ互換
       renderAll();
       showBanner('warning', '⚠️ GAS URLが未設定のため、ローカルキャッシュのデータを表示しています。このデータは他のメンバーには共有されません。「⚙️設定」タブでGAS URLを設定してください。');
     } else {
@@ -1078,6 +1166,16 @@ async function loadData() {
     state.actuals = data.actuals || [];
     state.scoutData = data.scoutData || [];
     state.members = data.members || [];
+    state.companies = data.companies || [];
+    // 会社が未登録の場合はデフォルトを初期化してGASに保存
+    if (state.companies.length === 0) {
+      const defaults = [
+        { company_id: 'company_1', name: 'SEVENRICH Accounting' },
+        { company_id: 'company_2', name: 'BPIO' }
+      ];
+      state.companies = defaults;
+      defaults.forEach(c => persistToGas('saveCompany', c));
+    }
     // GASデータとローカルデータをマージ（GAS未保存のローカル入力を消さないため）
     const gasSchedMap = {};
     (data.schedules || []).forEach(function(s) { gasSchedMap[s.job_id + '|' + s.date] = s; });
@@ -1098,7 +1196,7 @@ async function loadData() {
     showBanner('warning', `⚠️ チームのスプレッドシートに接続できませんでした（${e.message}）。表示中のデータはこの端末に保存されていた古い情報です。「⚙️設定」タブで「接続テスト」を行ってください。`);
     // 接続失敗時もローカルキャッシュがあれば表示する
     const cached = localStorage.getItem('scoutData');
-    if (cached) { state = JSON.parse(cached); renderAll(); }
+    if (cached) { state = JSON.parse(cached); if (!state.companies) state.companies = []; renderAll(); }
   }
 }
 
@@ -1109,8 +1207,11 @@ function renderAll() {
   populateSimJobSelect();
   updateSim1();
   updateSim2();
+  updateCostSim();
   populateMemberSelects();
+  populateCompanySelects();
   renderMembers();
+  renderCompanyList();
   renderSchedule();
   populateTrendJobSelect();
   renderTrendChart();
@@ -1159,9 +1260,31 @@ function clearKpiPeriod() {
   renderDashboard();
 }
 
+function renderCompanyFilterBtns() {
+  const area = document.getElementById('company-filter-btns');
+  if (!area) return;
+  const btns = [{ id: '', label: '全社' }, ...state.companies.map(c => ({ id: c.company_id, label: c.name }))];
+  area.innerHTML = btns.map(b => `
+    <button onclick="setDashCompanyFilter('${b.id}')"
+      style="padding:4px 12px;border-radius:99px;border:1.5px solid ${dashCompanyFilter===b.id?'var(--accent)':'var(--border)'};
+      background:${dashCompanyFilter===b.id?'var(--accent)':'transparent'};
+      color:${dashCompanyFilter===b.id?'#fff':'var(--ink-light)'};font-size:12.5px;font-weight:600;cursor:pointer;">
+      ${b.label}
+    </button>`).join('');
+}
+function setDashCompanyFilter(id) {
+  dashCompanyFilter = id;
+  renderCompanyFilterBtns();
+  renderDashboard();
+}
+
 function renderDashboard() {
-  // KPIs（期間フィルター対応）
-  const { rows: kpiRows, isFiltered } = getKpiFilteredData();
+  renderCompanyFilterBtns();
+  // KPIs（期間フィルター＋会社フィルター対応）
+  const { rows: kpiRowsAll, isFiltered } = getKpiFilteredData();
+  const kpiRows = dashCompanyFilter
+    ? kpiRowsAll.filter(r => r.company_id === dashCompanyFilter)
+    : kpiRowsAll;
   const totalSent   = kpiRows.reduce((s,r) => s + Number(r.platinum_sent || 0), 0);
   const totalRead   = kpiRows.reduce((s,r) => s + Number(r.platinum_read || 0), 0);
   const totalReply  = kpiRows.reduce((s,r) => s + Number(r.platinum_reply || 0), 0);
@@ -1170,25 +1293,34 @@ function renderDashboard() {
   const readRate    = totalSent > 0 ? (totalRead/totalSent*100).toFixed(1) : '—';
   const replyRate   = totalSent > 0 ? (totalReply/totalSent*100).toFixed(1) : '—';
   const periodNote  = isFiltered ? '（指定期間の最新値）' : '（最新の取込データ・全期間）';
+  const currentMonth = getCurrentPeriodLabel();
+  const filteredJobs = dashCompanyFilter
+    ? state.jobs.filter(j => j.company_id === dashCompanyFilter)
+    : state.jobs;
+  const scheduleTotal = filteredJobs.reduce((sum, job) => sum + getMonthlyScheduleTotal(job.job_id, currentMonth), 0);
 
   document.getElementById('kpi-area').innerHTML = `
-    <div class="kpi-card"><div class="kpi-label">PS 総送付数</div><div class="kpi-value kpi-accent">${totalSent.toLocaleString()}</div><div class="kpi-sub">プラチナスカウト合計${periodNote}</div></div>
+    <div class="kpi-card"><div class="kpi-label">実送付数（今月）</div><div class="kpi-value kpi-accent">${scheduleTotal.toLocaleString()}</div><div class="kpi-sub">スケジュール入力合計・再送を除く</div></div>
+    <div class="kpi-card" style="opacity:.7;"><div class="kpi-label">PS送信数（ビズリーチ記録）<span style="font-size:9px;background:#fef9c3;color:#a16207;border-radius:99px;padding:1px 6px;margin-left:4px;">再送含む</span></div><div class="kpi-value">${totalSent.toLocaleString()}</div><div class="kpi-sub">CSV取込値${periodNote}</div></div>
     <div class="kpi-card"><div class="kpi-label">既読率（平均）</div><div class="kpi-value kpi-success">${readRate}%</div><div class="kpi-sub">既読 ${totalRead.toLocaleString()} 通</div></div>
     <div class="kpi-card"><div class="kpi-label">返信率（平均）</div><div class="kpi-value kpi-warn">${replyRate}%</div><div class="kpi-sub">返信 ${totalReply.toLocaleString()} 通</div></div>
-    <div class="kpi-card" style="opacity:.6;"><div class="kpi-label">総エントリー数<span style="font-size:9px;background:#f1f5f9;color:#64748b;border-radius:99px;padding:1px 6px;margin-left:4px;">参考値</span></div><div class="kpi-value">${totalEntry.toLocaleString()}</div><div class="kpi-sub">HERP移管前の応募時点</div></div>
     <div class="kpi-card"><div class="kpi-label">決定数（内定承諾）</div><div class="kpi-value" style="color:var(--accent-2)">${totalHire}</div><div class="kpi-sub">成果報酬発生＝確定値</div></div>
   `;
 
-  // Table（求人別進捗は常に最新の目標管理に基づく：期間フィルター対象外）
+  // Table（求人別進捗：期間フィルター対象外・会社フィルター対応）
   const currentPeriod = getCurrentPeriodLabel();
   const tbody = document.getElementById('dash-tbody');
-  if (state.jobs.length === 0 && state.scoutData.length === 0) {
+  const tableRows = dashCompanyFilter
+    ? state.scoutData.filter(r => r.company_id === dashCompanyFilter)
+    : state.scoutData;
+  if (filteredJobs.length === 0 && tableRows.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--ink-muted);">データがありません。求人を追加するか、CSVをインポートしてください。</td></tr>`;
   } else {
-    tbody.innerHTML = state.scoutData.map(row => {
+    tbody.innerHTML = tableRows.map(row => {
       const job = state.jobs.find(j => j.position_name === row.position_name);
       const monthlyTarget = job ? Number(job.monthly_target || 0) : 0;
-      const actual = getActualForPeriod(row.position_name, 'monthly', currentPeriod);
+      const schedActual = job ? getMonthlyScheduleTotal(job.job_id, currentPeriod) : 0;
+      const actual = schedActual > 0 ? schedActual : getActualForPeriod(row.position_name, 'monthly', currentPeriod);
       const pct = monthlyTarget > 0 ? Math.round(actual/monthlyTarget*100) : null;
       const rr = Number(row.platinum_reply_rate?.toString().replace('%','') || 0);
       const rdr = Number(row.platinum_read_rate?.toString().replace('%','') || 0);
@@ -1338,10 +1470,12 @@ function renderTargets() {
   }
   tbody.innerHTML = state.jobs.map(job => {
     const scout = state.scoutData.find(s => s.position_name === job.position_name);
-    const monthlyTarget = Number(job.monthly_target || 0);
-    const weeklyTarget  = Number(job.weekly_target  || 0);
-    const actual        = getActualForPeriod(job.position_name, 'monthly', currentPeriod);
-    const pct           = monthlyTarget > 0 ? Math.round(actual/monthlyTarget*100) : null;
+    const monthlyTarget  = Number(job.monthly_target || 0);
+    const weeklyTarget   = Number(job.weekly_target  || 0);
+    const schedActual    = getMonthlyScheduleTotal(job.job_id, currentPeriod);
+    const actual         = schedActual > 0 ? schedActual : getActualForPeriod(job.position_name, 'monthly', currentPeriod);
+    const actualIsSchedule = schedActual > 0;
+    const pct            = monthlyTarget > 0 ? Math.round(actual/monthlyTarget*100) : null;
     const readRate      = scout ? formatRate(scout.platinum_read_rate) : '—';
     const replyRate     = scout ? formatRate(scout.platinum_reply_rate) : '—';
     const badge         = job.job_type === 'ハイクラスタレント'
@@ -1349,16 +1483,21 @@ function renderTargets() {
       : '<span class="badge badge-blue">タレント</span>';
     const member = state.members.find(m => m.member_id === job.member_id);
     const memberLabel = member ? member.name : '<span style="color:var(--ink-muted)">未設定</span>';
+    const company = state.companies.find(c => c.company_id === job.company_id);
+    const companyLabel = company ? company.name : '<span style="color:var(--ink-muted)">—</span>';
     return `<tr>
       <td style="font-weight:600">${job.position_name}</td>
+      <td>${companyLabel}</td>
       <td>${memberLabel}</td>
       <td>${badge}</td>
       <td>${weeklyTarget > 0 ? weeklyTarget+'通' : '<span style="color:var(--ink-muted)">—</span>'}</td>
       <td>${monthlyTarget > 0 ? monthlyTarget+'通' : '<span style="color:var(--ink-muted)">—</span>'}</td>
       <td>
-        <div style="display:flex;align-items:center;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
           <span style="font-weight:600">${actual}</span>通
-          <button class="btn btn-ghost btn-sm" onclick="openActualModal('${job.job_id}','${job.position_name}')">入力</button>
+          ${actualIsSchedule
+            ? '<span style="font-size:10px;color:var(--success);font-weight:600;">📅 スケジュール集計</span>'
+            : `<button class="btn btn-ghost btn-sm" onclick="openActualModal('${job.job_id}','${job.position_name}')">手動入力</button>`}
         </div>
       </td>
       <td>${pct !== null ? progressCell(pct) : '<span style="color:var(--ink-muted);font-size:12px">目標未設定</span>'}</td>
@@ -1395,7 +1534,8 @@ function openJobModal(jobId) {
     document.getElementById('jm-date').value    = job.start_date || '';
     document.getElementById('jm-weekly').value  = job.weekly_target || '';
     document.getElementById('jm-monthly').value = job.monthly_target || '';
-    document.getElementById('jm-member').value  = job.member_id || '';
+    document.getElementById('jm-member').value   = job.member_id  || '';
+    document.getElementById('jm-company').value  = job.company_id || '';
   } else {
     document.getElementById('jm-name').value    = '';
     document.getElementById('jm-type').value    = 'タレント';
@@ -1403,6 +1543,7 @@ function openJobModal(jobId) {
     document.getElementById('jm-weekly').value  = '';
     document.getElementById('jm-monthly').value = '';
     document.getElementById('jm-member').value  = '';
+    document.getElementById('jm-company').value = '';
   }
   document.getElementById('job-modal').classList.add('open');
 }
@@ -1418,7 +1559,8 @@ async function saveJob() {
     start_date:    document.getElementById('jm-date').value,
     weekly_target: Number(document.getElementById('jm-weekly').value || 0),
     monthly_target:Number(document.getElementById('jm-monthly').value || 0),
-    member_id:     document.getElementById('jm-member').value || '',
+    member_id:     document.getElementById('jm-member').value  || '',
+    company_id:    document.getElementById('jm-company').value || '',
     is_active:     true,
   };
   const existing = state.jobs.findIndex(j => j.job_id === data.job_id);
@@ -1534,6 +1676,7 @@ function parseCsv(file) {
         offer:               parseNum(row[COL.offer]),
         hire:                parseNum(row[COL.hire]),
         job_id:              'csv_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+        company_id:          document.getElementById('import-company-select')?.value || '',
       }));
 
       // プレビュー表示
@@ -1618,6 +1761,27 @@ function populateMemberSelects() {
   }
 }
 
+function populateCompanySelects() {
+  const jobOpts = '<option value="">— 未設定 —</option>' +
+    state.companies.map(c => `<option value="${c.company_id}">${c.name}</option>`).join('');
+  const allOpts = '<option value="">全社</option>' +
+    state.companies.map(c => `<option value="${c.company_id}">${c.name}</option>`).join('');
+  ['jm-company', 'import-company-select'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = jobOpts;
+    if (cur) el.value = cur;
+  });
+  ['report-company'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    el.innerHTML = allOpts;
+    if (cur) el.value = cur;
+  });
+}
+
 function renderMembers() {
   const tbody = document.getElementById('members-tbody');
   if (!tbody) return;
@@ -1662,6 +1826,49 @@ async function deleteMember(memberId) {
   state.jobs.forEach(j => { if (j.member_id === memberId) j.member_id = ''; });
   renderAll();
   await persistToGas('deleteMember', null, { memberId });
+}
+
+// ─── Companies (会社管理) ──────────────────────────────────
+function renderCompanyList() {
+  const el = document.getElementById('company-list');
+  if (!el) return;
+  if (state.companies.length === 0) {
+    el.innerHTML = '<p style="font-size:13px;color:var(--ink-muted);">まだ会社が登録されていません</p>';
+    return;
+  }
+  el.innerHTML = state.companies.map(c => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#f7f7fc;border-radius:8px;margin-bottom:6px;">
+      <span style="font-weight:600;">${c.name}</span>
+      <button class="btn btn-danger-ghost btn-sm" onclick="deleteCompany('${c.company_id}')">削除</button>
+    </div>`).join('');
+}
+
+async function addCompany() {
+  const name = document.getElementById('new-company-name').value.trim();
+  if (!name) { showToast('会社名を入力してください'); return; }
+  if (state.companies.some(c => c.name === name)) { showToast('同名の会社が既に登録されています'); return; }
+  const data = { company_id: 'company_' + Date.now(), name, created_at: new Date().toISOString().slice(0,10) };
+  state.companies.push(data);
+  document.getElementById('new-company-name').value = '';
+  renderCompanyList();
+  populateCompanySelects();
+  renderCompanyFilterBtns();
+  await persistToGas('saveCompany', data);
+}
+
+async function deleteCompany(companyId) {
+  if (!confirm('この会社を削除しますか？（関連する求人の会社設定は解除されます）')) return;
+  const affectedJobs = state.jobs.filter(j => j.company_id === companyId);
+  state.companies = state.companies.filter(c => c.company_id !== companyId);
+  state.jobs.forEach(j => { if (j.company_id === companyId) j.company_id = ''; });
+  renderCompanyList();
+  populateCompanySelects();
+  renderCompanyFilterBtns();
+  await persistToGas('deleteCompany', null, { companyId });
+  // 会社設定が解除された求人もGASに再保存（次回ロード時に旧データが復元されないよう）
+  for (const job of affectedJobs) {
+    await persistToGas('saveJob', { ...job, company_id: '' });
+  }
 }
 
 // ─── Schedule (送付スケジュール) ───────────────────────────
@@ -1876,7 +2083,9 @@ async function updateScheduleCell(jobId, dateStr, value) {
   const data = { schedule_id: (idx>=0 ? state.schedules[idx].schedule_id : 'sch_'+Date.now()+Math.random().toString(36).slice(2,5)), job_id: jobId, date: dateStr, sent_count: count };
   if (idx >= 0) state.schedules[idx] = data;
   else state.schedules.push(data);
-  renderSchedule(); // 引き直し計画も含めて再描画
+  renderSchedule();
+  renderTargets();   // 目標管理の今月の実績・月次進捗を即時更新
+  renderDashboard(); // ダッシュボードのKPI・進捗サマリを即時更新
   await persistToGas('saveSchedule', data);
 }
 
@@ -1893,14 +2102,14 @@ function getAvgYield(jobName) {
     : state.scoutData;
   if (rows.length === 0) return null;
   const totalSent  = rows.reduce((s,r)=>s+Number(r.platinum_sent||0),0);
+  const totalRead  = rows.reduce((s,r)=>s+Number(r.platinum_read||0),0);
   const totalReply = rows.reduce((s,r)=>s+Number(r.platinum_reply||0),0);
   const totalHire  = rows.reduce((s,r)=>s+Number(r.hire||0),0);
-  // 書類通過〜内定はHERPに移管されビズリーチ上で更新されないため使用しない。
-  // 「返信率」と「返信→決定率」の2段階のみで歩留を算出する（ともに確実な数値）。
   return {
-    reply_rate: totalSent  > 0 ? totalReply/totalSent   : 0,
-    hire_rate:  totalReply > 0 ? totalHire/totalReply   : 0,
-    totalSent, totalReply, totalHire
+    read_rate:            totalSent  > 0 ? totalRead/totalSent          : 0,
+    reply_from_read_rate: totalRead  > 0 ? totalReply/totalRead         : 0,
+    hire_rate:            totalReply > 0 ? totalHire/totalReply         : 0,
+    totalSent, totalRead, totalReply, totalHire
   };
 }
 
@@ -1917,31 +2126,82 @@ function updateSim1() {
     if (brkEl) brkEl.innerHTML = '';
     return;
   }
-  // 逆算（返信率 × 返信→決定率 の2段階のみ。書類通過〜内定はHERP移管のため不使用）
-  const needReply = y.hire_rate  > 0 ? Math.ceil(targetHire / y.hire_rate)  : '∞';
-  const needSent  = typeof needReply === 'number' && y.reply_rate > 0 ? Math.ceil(needReply / y.reply_rate) : '∞';
+  // 逆算：スカウト → 既読 → 返信 → 内定承諾（4段階）
+  const needReply = y.hire_rate            > 0 ? Math.ceil(targetHire / y.hire_rate)            : '∞';
+  const needRead  = typeof needReply === 'number' && y.reply_from_read_rate > 0 ? Math.ceil(needReply / y.reply_from_read_rate) : '∞';
+  const needSent  = typeof needRead === 'number'  && y.read_rate > 0            ? Math.ceil(needRead  / y.read_rate)            : '∞';
   if (funnelArea) funnelArea.innerHTML = `
-    <div style="font-size:12.5px;color:var(--ink-light);margin-bottom:6px;font-weight:600;">実績歩留（${jobName||'全求人平均'}）</div>
-    <div style="font-size:11px;color:var(--ink-muted);margin-bottom:10px;">※ ビズリーチ上で確実な「返信率」「決定数」のみを使用しています</div>
+    <div style="font-size:12.5px;color:var(--ink-light);margin-bottom:8px;font-weight:600;">実績歩留（${jobName||'全求人平均'}）</div>
     <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:13px;">
-      <span style="background:#eef2ff;color:var(--accent);border-radius:6px;padding:4px 10px;font-weight:700;">返信率 ${(y.reply_rate*100).toFixed(1)}%</span>
-      <span style="color:var(--ink-muted)">×</span>
-      <span style="background:#fdf4ff;color:var(--accent-2);border-radius:6px;padding:4px 10px;font-weight:700;">返信→決定率 ${(y.hire_rate*100).toFixed(2)}%</span>
+      <span style="background:#eef2ff;color:var(--accent);border-radius:6px;padding:4px 10px;font-weight:700;">既読率 ${(y.read_rate*100).toFixed(1)}%</span>
+      <span style="color:var(--ink-muted)">→</span>
+      <span style="background:#fdf4ff;color:var(--accent-2);border-radius:6px;padding:4px 10px;font-weight:700;">既読→返信率 ${(y.reply_from_read_rate*100).toFixed(1)}%</span>
+      <span style="color:var(--ink-muted)">→</span>
+      <span style="background:#fef9c3;color:#92400e;border-radius:6px;padding:4px 10px;font-weight:700;">返信→内定率 ${(y.hire_rate*100).toFixed(2)}%</span>
     </div>`;
   if (numEl) numEl.textContent = typeof needSent === 'number' ? needSent.toLocaleString() : '∞';
-  if (brkEl) brkEl.innerHTML = `返信 ${typeof needReply==='number'?needReply:'∞'} 通<br>決定 ${targetHire} 人`;
+  if (brkEl) brkEl.innerHTML = `既読 ${typeof needRead==='number'?needRead:'∞'} 通 / 返信 ${typeof needReply==='number'?needReply:'∞'} 通 / 内定 ${targetHire} 人`;
 }
 
 function updateSim2() {
-  const replyRate = Number(document.getElementById('sim2-reply-rate')?.value || 3) / 100;
-  const hireRate  = Number(document.getElementById('sim2-hire-rate')?.value || 5) / 100;
-  const target    = Number(document.getElementById('sim2-target')?.value || 1);
-  const needReply = hireRate  > 0 ? Math.ceil(target / hireRate)   : Infinity;
-  const needSent  = replyRate > 0 ? Math.ceil(needReply / replyRate): Infinity;
+  const readRate      = Number(document.getElementById('sim2-read-rate')?.value  || 40) / 100;
+  const replyFromRead = Number(document.getElementById('sim2-reply-rate')?.value || 8)  / 100;
+  const hireFromReply = Number(document.getElementById('sim2-hire-rate')?.value  || 5)  / 100;
+  const target        = Number(document.getElementById('sim2-target')?.value     || 1);
+  const needReply = hireFromReply > 0 ? Math.ceil(target     / hireFromReply) : Infinity;
+  const needRead  = replyFromRead > 0 ? Math.ceil(needReply  / replyFromRead) : Infinity;
+  const needSent  = readRate      > 0 ? Math.ceil(needRead   / readRate)      : Infinity;
   const numEl = document.getElementById('sim2-num');
   const brkEl = document.getElementById('sim2-breakdown');
   if (numEl) numEl.textContent = isFinite(needSent) ? needSent.toLocaleString() : '∞';
-  if (brkEl) brkEl.innerHTML = `返信 ${isFinite(needReply)?needReply:'∞'} 通<br>決定 ${target} 人`;
+  if (brkEl) brkEl.innerHTML = `既読 ${isFinite(needRead)?needRead:'∞'} 通 / 返信 ${isFinite(needReply)?needReply:'∞'} 通 / 内定 ${target} 人`;
+  updateCostSim();
+}
+
+function updateCostSim() {
+  const perSend    = Number(document.getElementById('cost-per-send')?.value    || 700);
+  const salary     = Number(document.getElementById('cost-salary')?.value      || 600);
+  const sucRate    = Number(document.getElementById('cost-success-rate')?.value|| 15) / 100;
+  const el = document.getElementById('cost-result');
+  if (!el) return;
+  // sim2スライダー値から必要送付数を再計算
+  const readRate      = Number(document.getElementById('sim2-read-rate')?.value  || 40) / 100;
+  const replyFromRead = Number(document.getElementById('sim2-reply-rate')?.value || 8)  / 100;
+  const hireFromReply = Number(document.getElementById('sim2-hire-rate')?.value  || 5)  / 100;
+  const target        = Number(document.getElementById('sim2-target')?.value     || 1);
+  const needReply = hireFromReply > 0 ? Math.ceil(target    / hireFromReply) : Infinity;
+  const needRead  = replyFromRead > 0 ? Math.ceil(needReply / replyFromRead) : Infinity;
+  const needSent  = readRate      > 0 ? Math.ceil(needRead  / readRate)      : Infinity;
+  const successFee = salary * 10000 * sucRate;
+  if (!isFinite(needSent)) {
+    el.innerHTML = `<div style="background:#f7f7fc;border-radius:8px;padding:14px;font-size:13px;color:var(--ink-muted);">
+      仮定ベース計画で歩留を設定すると採用単価が自動計算されます。<br>
+      <span style="color:var(--ink-light);">成功報酬（参考）: <strong>${Math.round(successFee).toLocaleString()}円</strong>（年収${salary}万円 × ${(sucRate*100).toFixed(1)}%）</span>
+    </div>`;
+    return;
+  }
+  const sendCost  = needSent * perSend;
+  const total     = sendCost + successFee;
+  el.innerHTML = `
+    <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:8px;padding:16px;">
+      <div style="font-size:12px;color:var(--ink-muted);margin-bottom:10px;">仮定ベース計画の送付数（${needSent.toLocaleString()}通）をもとに算出</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--ink-muted);">スカウト送付費用</div>
+          <div style="font-size:18px;font-weight:700;">${Math.round(sendCost).toLocaleString()}<span style="font-size:12px;">円</span></div>
+          <div style="font-size:11px;color:var(--ink-muted);">${needSent.toLocaleString()}通 × ${perSend.toLocaleString()}円</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--ink-muted);">成功報酬</div>
+          <div style="font-size:18px;font-weight:700;">${Math.round(successFee).toLocaleString()}<span style="font-size:12px;">円</span></div>
+          <div style="font-size:11px;color:var(--ink-muted);">年収${salary}万円 × ${(sucRate*100).toFixed(1)}%</div>
+        </div>
+        <div style="text-align:center;background:white;border-radius:8px;padding:10px;">
+          <div style="font-size:11px;color:var(--ink-muted);">採用単価（合計）</div>
+          <div style="font-size:22px;font-weight:700;color:var(--accent);">${Math.round(total).toLocaleString()}<span style="font-size:13px;">円</span></div>
+        </div>
+      </div>
+    </div>`;
 }
 
 // ─── GAS persist ──────────────────────────────────────────
@@ -1977,7 +2237,8 @@ function actionLabel(action) {
   const labels = {
     saveJob: '求人の登録', saveActual: '実績の入力', saveScoutData: 'CSVインポート',
     deleteJob: '求人の削除', saveMember: '担当者の登録', deleteMember: '担当者の削除',
-    saveSchedule: '送付スケジュールの入力', saveScoutHistory: 'CSV履歴の保存'
+    saveSchedule: '送付スケジュールの入力', saveScoutHistory: 'CSV履歴の保存',
+    saveCompany: '会社の登録', deleteCompany: '会社の削除'
   };
   return labels[action] || action;
 }
@@ -2025,7 +2286,7 @@ async function testConnection() {
 function clearLocalCache() {
   if (!confirm('ローカルキャッシュをクリアしますか？')) return;
   localStorage.removeItem('scoutData');
-  state = { jobs: [], actuals: [], scoutData: [], csvPreview: [], members: [], schedules: [], scoutHistory: [] };
+  state = { jobs: [], actuals: [], scoutData: [], csvPreview: [], members: [], schedules: [], scoutHistory: [], companies: [] };
   renderAll();
   showToast('キャッシュをクリアしました');
 }
@@ -2042,6 +2303,11 @@ function getActualForPeriod(jobName, periodType, periodLabel) {
     a => a.job_id === job.job_id && a.period_type === periodType && a.period_label === periodLabel
   );
   return act ? Number(act.sent_count || 0) : 0;
+}
+function getMonthlyScheduleTotal(jobId, yearMonth) {
+  return state.schedules
+    .filter(s => s.job_id === jobId && String(s.date).startsWith(yearMonth))
+    .reduce((sum, s) => sum + Number(s.sent_count || 0), 0);
 }
 function formatRate(val) {
   if (val === undefined || val === null || val === '') return '—';
@@ -2073,6 +2339,168 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── Report ───────────────────────────────────────────────
+function initReportPanel() {
+  const monthEl = document.getElementById('report-month');
+  if (monthEl && !monthEl.value) monthEl.value = getCurrentPeriodLabel();
+  populateCompanySelects();
+}
+
+function generateReport() {
+  const month     = document.getElementById('report-month')?.value || getCurrentPeriodLabel();
+  const companyId = document.getElementById('report-company')?.value || '';
+  const company   = state.companies.find(c => c.company_id === companyId);
+  const companyName = company ? company.name : '全社';
+
+  let jobs = state.jobs;
+  if (companyId) jobs = jobs.filter(j => j.company_id === companyId);
+
+  const sendTotals = jobs.map(job => ({
+    name:   job.position_name,
+    sent:   getMonthlyScheduleTotal(job.job_id, month),
+    target: Number(job.monthly_target || 0),
+  }));
+  const totalSent   = sendTotals.reduce((s, r) => s + r.sent,   0);
+  const totalTarget = sendTotals.reduce((s, r) => s + r.target, 0);
+  const achievePct  = totalTarget > 0 ? Math.round(totalSent / totalTarget * 100) : null;
+
+  let kpiRows = state.scoutData;
+  if (companyId) kpiRows = kpiRows.filter(r => r.company_id === companyId);
+  const totalPSSent = kpiRows.reduce((s, r) => s + Number(r.platinum_sent  || 0), 0);
+  const totalRead   = kpiRows.reduce((s, r) => s + Number(r.platinum_read  || 0), 0);
+  const totalReply  = kpiRows.reduce((s, r) => s + Number(r.platinum_reply || 0), 0);
+  const totalHire   = kpiRows.reduce((s, r) => s + Number(r.hire           || 0), 0);
+  const readRate    = totalPSSent > 0 ? (totalRead  / totalPSSent * 100) : null;
+  const replyRate   = totalPSSent > 0 ? (totalReply / totalPSSent * 100) : null;
+
+  const insights = generateInsights({ sendTotals, totalSent, totalTarget, achievePct,
+    readRate: readRate !== null ? readRate : NaN, replyRate: replyRate !== null ? replyRate : NaN, totalHire });
+
+  const [y, m] = month.split('-');
+  document.getElementById('report-output').innerHTML = `
+    <div id="report-printable" style="background:white;border-radius:12px;padding:32px;border:1.5px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;padding-bottom:16px;border-bottom:3px solid var(--accent);">
+        <div>
+          <h2 style="font-size:20px;font-weight:700;color:var(--ink);">スカウト運用 月次レポート</h2>
+          <p style="font-size:14px;color:var(--ink-light);margin-top:4px;">${y}年${Number(m)}月 ／ ${companyName}</p>
+        </div>
+        <div style="font-size:12px;color:var(--ink-muted);">作成日: ${new Date().toLocaleDateString('ja-JP')}</div>
+      </div>
+
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;padding-left:10px;border-left:4px solid var(--accent);">① 送付実績サマリ</h3>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;">
+        ${[
+          { label:'実送付数（今月）', val: totalSent.toLocaleString(), sub:`目標: ${totalTarget>0?totalTarget.toLocaleString()+'通':'未設定'}`, color:'var(--accent)' },
+          { label:'達成率', val: achievePct!==null ? achievePct+'%' : '—',
+            color: achievePct!==null?(achievePct>=100?'var(--success)':achievePct>=60?'var(--warning)':'var(--danger)'):'var(--ink-muted)', sub:'月次目標比' },
+          { label:'既読率', val: readRate!==null?readRate.toFixed(1)+'%':'—', sub:`既読 ${totalRead.toLocaleString()}通`, color:'var(--success)' },
+          { label:'返信率', val: replyRate!==null?replyRate.toFixed(1)+'%':'—', sub:`返信 ${totalReply.toLocaleString()}通`, color:'var(--warning)' },
+        ].map(s=>`<div style="background:#f7f7fc;border-radius:8px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:var(--ink-muted);">${s.label}</div>
+          <div style="font-size:24px;font-weight:700;color:${s.color};">${s.val}</div>
+          <div style="font-size:11px;color:var(--ink-muted);">${s.sub}</div>
+        </div>`).join('')}
+      </div>
+
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;padding-left:10px;border-left:4px solid var(--accent);">② 求人別進捗</h3>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:13px;">
+        <thead><tr style="background:#f0f0f8;">
+          <th style="padding:8px 12px;text-align:left;border-bottom:2px solid var(--border);">ポジション名</th>
+          <th style="padding:8px 12px;text-align:right;border-bottom:2px solid var(--border);">月次目標</th>
+          <th style="padding:8px 12px;text-align:right;border-bottom:2px solid var(--border);">実送付数</th>
+          <th style="padding:8px 12px;text-align:right;border-bottom:2px solid var(--border);">達成率</th>
+        </tr></thead>
+        <tbody>${sendTotals.map(r => {
+          const pct = r.target > 0 ? Math.round(r.sent / r.target * 100) : null;
+          const col = pct!==null?(pct>=100?'var(--success)':pct>=60?'var(--warning)':'var(--danger)'):'var(--ink-muted)';
+          return `<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px 12px;font-weight:600;">${r.name}</td>
+            <td style="padding:8px 12px;text-align:right;">${r.target>0?r.target+'通':'—'}</td>
+            <td style="padding:8px 12px;text-align:right;font-weight:700;">${r.sent}通</td>
+            <td style="padding:8px 12px;text-align:right;color:${col};">${pct!==null?pct+'%':'—'}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;padding-left:10px;border-left:4px solid var(--accent);">③ ファネル実績（ビズリーチ記録）</h3>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:24px;">
+        ${[
+          { label:'送付（PS）', val: totalPSSent, note:'再送含む' },
+          { label:'既読',       val: totalRead,   note:'' },
+          { label:'返信',       val: totalReply,  note:'' },
+          { label:'内定承諾',   val: totalHire,   note:'' },
+        ].map(s=>`<div style="background:#f7f7fc;border-radius:8px;padding:12px;text-align:center;">
+          <div style="font-size:11px;color:var(--ink-muted);">${s.label}</div>
+          <div style="font-size:20px;font-weight:700;">${s.val.toLocaleString()}</div>
+          ${s.note?`<div style="font-size:10px;color:var(--ink-muted);">${s.note}</div>`:''}
+        </div>`).join('')}
+      </div>
+
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;padding-left:10px;border-left:4px solid var(--accent);">④ 課題と施策</h3>
+      <div style="background:#f0f4ff;border-radius:8px;padding:18px;">
+        ${insights.length === 0
+          ? '<p style="color:var(--ink-muted);font-size:13px;">特筆すべき課題は検出されませんでした。引き続き現在の運用を維持してください。</p>'
+          : insights.map(ins => `<div style="margin-bottom:14px;">
+              <div style="font-weight:700;color:var(--ink);margin-bottom:4px;">【課題】${ins.issue}</div>
+              <div style="color:var(--ink-light);font-size:13px;">→ ${ins.action}</div>
+            </div>`).join('')}
+      </div>
+    </div>`;
+  showToast('✅ レポートを生成しました');
+}
+
+function generateInsights({ sendTotals, totalSent, totalTarget, achievePct, readRate, replyRate, totalHire }) {
+  const insights = [];
+  if (achievePct !== null && achievePct < 80) {
+    insights.push({
+      issue: `月次送付目標の達成率が${achievePct}%と目標を下回っています`,
+      action: '送付スケジュールを確認し、残り営業日でのビハインド分の上乗せ送付計画を立ててください。スケジュールタブの「引き直し計画」機能が活用できます。'
+    });
+  }
+  if (!isNaN(readRate) && readRate < 30) {
+    insights.push({
+      issue: `既読率が${readRate.toFixed(1)}%と低い水準にあります（目安：30〜50%）`,
+      action: '件名・本文の冒頭をパーソナライズし、候補者の職歴や実績に言及することで開封率向上が期待できます。送付曜日・時間帯（火〜木の午前中）も見直してみてください。'
+    });
+  }
+  if (!isNaN(replyRate) && replyRate < 3) {
+    insights.push({
+      issue: `返信率が${replyRate.toFixed(1)}%と低い水準にあります（目安：3〜8%）`,
+      action: 'スカウト文面の魅力度を強化してください。ポジションの成長性・年収アップ可能性・リモート等の働き方を冒頭に明示することが効果的です。A/Bテストで訴求軸を変えて試してみてください。'
+    });
+  }
+  const behinds = sendTotals.filter(r => r.target > 0 && r.sent / r.target < 0.6);
+  if (behinds.length > 0) {
+    insights.push({
+      issue: `${behinds.map(r => r.name).join('・')} の達成率が60%を下回っています`,
+      action: 'これらのポジションの担当者と週次で進捗確認ミーティングを設定し、対象候補者の検索条件やスカウト文面の見直しを行ってください。'
+    });
+  }
+  if (totalHire > 0) {
+    insights.push({
+      issue: `今月の内定承諾数：${totalHire}名`,
+      action: '成約に至ったスカウト文面・求人の特徴をナレッジとして記録し、他求人の改善に活用してください。'
+    });
+  }
+  return insights;
+}
+
+function printReport() {
+  const el = document.getElementById('report-printable');
+  if (!el) { showToast('先にレポートを生成してください'); return; }
+  const printWin = window.open('', '_blank');
+  printWin.document.write(`<!DOCTYPE html><html lang="ja"><head><meta charset="UTF-8">
+    <title>スカウト運用レポート</title>
+    <style>
+      body { font-family: 'Hiragino Sans', 'Meiryo', sans-serif; margin: 20px; color: #1a1a2e; font-size: 13px; line-height: 1.6; }
+      * { box-sizing: border-box; }
+      :root { --accent:#4f46e5;--success:#059669;--warning:#d97706;--danger:#dc2626;--ink:#1a1a2e;--ink-light:#4a4a6a;--ink-muted:#9898b0;--border:#e2e2ee; }
+    </style></head><body>${el.outerHTML}</body></html>`);
+  printWin.document.close();
+  printWin.focus();
+  printWin.print();
 }
 
 // ─── Init ─────────────────────────────────────────────────
